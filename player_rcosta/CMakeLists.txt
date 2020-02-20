@@ -206,5 +206,3 @@ include_directories(
 # catkin_add_nosetests(test)
 
 
-add_executable(player_rcosta src/player_node.py)
-target_link_libraries(player_rcosta ${catkin_LIBRARIES})
