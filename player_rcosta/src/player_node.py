@@ -103,7 +103,6 @@ def movePlayer(tf_broadcaster, player_name, transform_now, vel, angle, max_vel):
     tf_broadcaster.sendTransform(trans, quat, rospy.Time.now(), player_name, "world")
 
 
-
 class Player():
 
     def __init__(self, player_name):
@@ -113,7 +112,6 @@ class Player():
         red_team = rospy.get_param('/red_team')
         green_team = rospy.get_param('/green_team')
         blue_team = rospy.get_param('/blue_team')
-
 
         if self.player_name in red_team:
             self.my_team, self.prey_team, self.hunter_team = 'red', 'green', 'blue'
@@ -135,24 +133,42 @@ class Player():
             'I am ' + self.player_name + ' and I am from this team ' + self.my_team + '. ' + self.prey_team + ' players are all going die!')
         rospy.loginfo('I am afraid of ' + str(self.hunters))
 
-
         self.br = tf.TransformBroadcaster()
         self.transform = Transform()
         randomizePlayerPose(self.transform)
 
         rospy.Subscriber("make_a_play", MakeAPlay, self.makeAPlayCallBack)
 
-
-
-
-
-
     def makeAPlayCallBack(self, msg):
         max_vel, max_angle = msg.cheetah, math.pi / 30
 
-        if msg.green_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
-            target = msg.green_alive[0]  # select the first alive green player (I am hunting green)
+        if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
+            target = msg.blue_alive[0]
+            #target1 = msg.blue_alive[0]  # select the first alive green player (I am hunting green)
+            #target2 = msg.blue_alive[1]
+            #target3 = msg.blue_alive[2]
+
             distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+            #distance1, angle1 = getDistanceAndAngleToTarget(self.listener, self.player_name, target1)
+            #distance2, angle2 = getDistanceAndAngleToTarget(self.listener, self.player_name, target2)
+            #distance3, angle3 = getDistanceAndAngleToTarget(self.listener, self.player_name, target3)
+
+           # if distance1 < distance2:
+           #     if distance1 < distance3:
+           #         target = target1
+           #         distance = distance1
+           #         angle = angle1
+
+          #      elif distance2 < distance3:
+          #          target = target2
+          #          distance = distance2
+          #          angle = angle2
+
+           # else:
+          #      target = target3
+         #       distance = distance3
+        #        angle = angle3
+
             vel = max_vel  # full throttle
             rospy.loginfo(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
         else:  # what else to do? Lets just move towards the center
@@ -166,23 +182,19 @@ class Player():
         movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
 
 
-
 def callback(msg):
-
     print("received a message cointaining string" + msg.data)
 
-def main():
 
+def main():
     rospy.init_node('rcosta', anonymous=False)
 
     player = Player("rcosta")
 
-    #rospy.Subscriber("chatter",String, callback)
+    # rospy.Subscriber("chatter",String, callback)
 
     rospy.spin()
 
+
 if __name__ == "__main__":
     main()
-
-
-
