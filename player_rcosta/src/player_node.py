@@ -147,42 +147,20 @@ class Player():
             target1 = []
             distance1 = []
             angle1 = []
-            #target1 = msg.blue_alive[0]  # select the first alive green player (I am hunting green)
-            #target2 = msg.blue_alive[1]
-            #target3 = msg.blue_alive[2]
+
 
             distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
-            #distance1, angle1 = getDistanceAndAngleToTarget(self.listener, self.player_name, target1)
-            #distance2, angle2 = getDistanceAndAngleToTarget(self.listener, self.player_name, target2)
-            #distance3, angle3 = getDistanceAndAngleToTarget(self.listener, self.player_name, target3)
 
             for x in range(0, len(msg.blue_alive)-1):
                 target1[x]=msg.blue_alive[x]
                 distance1[x], angle1[x] = getDistanceAndAngleToTarget(self.listener, self.player_name, target1[x])
 
-            for a in range(1,len(target1)):
-                if distance1[x] < distance1[x-1]:
-                    target = target1[x]
-                    angle=angle1[x]
+            for a in range(0,len(target1)):
+                if distance1[a] < distance1[a+1]:
+                    target = target1[a]
+                    angle=angle1[a]
 
 
-
-
-           # if distance1 < distance2:
-           #     if distance1 < distance3:
-           #         target = target1
-           #         distance = distance1
-           #         angle = angle1
-
-          #      elif distance2 < distance3:
-          #          target = target2
-          #          distance = distance2
-          #          angle = angle2
-
-           # else:
-          #      target = target3
-         #       distance = distance3
-        #        angle = angle3
 
             vel = max_vel  # full throttle
             rospy.loginfo(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
@@ -193,9 +171,16 @@ class Player():
         else:  # what else to do? Lets just move towards the center
             target = msg.red_alive[0]
             distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+            distancetw, angletw = getDistanceAndAngleToTarget(self.listener, self.player_name, 'world')
             vel = max_vel  # full throttle
             rospy.loginfo(self.player_name + ': Moving to the center of the arena.')
             rospy.loginfo('I am ' + str(distance) + ' from ' + target)
+
+            if angle is None:
+                angle = 0
+
+            if distancetw > 6:
+                angle = -angletw
 
             # Actually move the player
             movePlayer(self.br, self.player_name, self.transform, vel, -angle, max_vel)
