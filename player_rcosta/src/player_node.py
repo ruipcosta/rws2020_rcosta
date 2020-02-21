@@ -167,17 +167,19 @@ class Player():
 
             distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
 
-            for x in range(0, len(msg.blue_alive)-1):
-                target1[x]=msg.blue_alive[x]
-                distance1[x], angle1[x] = getDistanceAndAngleToTarget(self.listener, self.player_name, target1[x])
+           # for x in range(0, len(msg.blue_alive)):
+            #    target1.append(str(msg.blue_alive[x]))
+             #   distance1[x], angle1[x] = getDistanceAndAngleToTarget(self.listener, self.player_name, target1[x])
 
-            for a in range(0,len(target1)):
-                if distance1[a] < distance1[a+1]:
-                    target = target1[a]
-                    angle=angle1[a]
+            #for a in range(0,len(target1)):
+             #   if distance1[a] < distance1[a+1]:
+              #      target = target1[a]
+               #     angle=angle1[a]
 
             if angle is None:
                 angle = 0
+
+            target = msg.blue_alive[0]
 
             self.m.header.stamp = rospy.Time.now()
             self.m.text = 'Oh ' + target + ' tas tramado!'
