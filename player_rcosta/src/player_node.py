@@ -9,6 +9,7 @@ import rospy
 import tf
 from geometry_msgs.msg import Transform, Quaternion
 import numpy as np
+from visualization_msgs.msg import Marker
 
 
 def getDistanceAndAngleToTarget(tf_listener, my_name, target_name,
@@ -109,6 +110,21 @@ class Player():
         self.player_name = player_name
         self.listener = tf.TransformListener()
 
+        self.m = Marker(ns=self.player_name, id=0, type=Marker.TEXT_VIEW_FACING, action=Marker.ADD)
+        self.m.header.frame_id = "moliveira"
+        self.m.header.stamp = rospy.Time.now()
+        self.m.pose.position.y = 1
+        self.m.pose.orientation.w = 1.0
+        self.m.scale.z = 0.4
+        self.m.color.a = 1.0
+        self.m.color.r = 0.0
+        self.m.color.g = 0.0
+        self.m.color.b = 0.0
+        self.m.text = "Nada a declarar"
+        self.m.lifetime = rospy.Duration(3)
+
+        self.pub_bocas = rospy.Publisher('/bocas', Marker, queue_size=1)
+
         red_team = rospy.get_param('/red_team')
         green_team = rospy.get_param('/green_team')
         blue_team = rospy.get_param('/blue_team')
@@ -160,6 +176,12 @@ class Player():
                     target = target1[a]
                     angle=angle1[a]
 
+            if angle is None:
+                angle = 0
+
+            self.m.header.stamp = rospy.Time.now()
+            self.m.text = 'Oh ' + target + ' tas tramado!'
+            self.pub_bocas.publish(self.m)
 
 
             vel = max_vel  # full throttle
@@ -181,6 +203,10 @@ class Player():
 
             if distancetw > 6:
                 angle = -angletw
+
+            self.m.header.stamp = rospy.Time.now()
+            self.m.text = 'Ninguem me toca!'
+            self.pub_bocas.publish(self.m)
 
             # Actually move the player
             movePlayer(self.br, self.player_name, self.transform, vel, -angle, max_vel)
