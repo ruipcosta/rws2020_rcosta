@@ -111,7 +111,7 @@ class Player():
         self.listener = tf.TransformListener()
 
         self.m = Marker(ns=self.player_name, id=0, type=Marker.TEXT_VIEW_FACING, action=Marker.ADD)
-        self.m.header.frame_id = "moliveira"
+        self.m.header.frame_id = "rcosta"
         self.m.header.stamp = rospy.Time.now()
         self.m.pose.position.y = 1
         self.m.pose.orientation.w = 1.0
@@ -158,7 +158,7 @@ class Player():
     def makeAPlayCallBack(self, msg):
         max_vel, max_angle = msg.cheetah, math.pi / 30
 
-        if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
+        if msg.blue_alive[0]:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
             target = msg.blue_alive[0]
             target1 = []
             distance1 = []
