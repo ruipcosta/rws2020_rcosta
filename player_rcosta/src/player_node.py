@@ -151,7 +151,7 @@ class Player():
         max_vel, max_angle = msg.cheetah, math.pi / 30
 
         if msg.green_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
-            target = msg.green_blue[0]  # select the first alive green player (I am hunting green)
+            target = msg.green_alive[0]  # select the first alive green player (I am hunting green)
             distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
             vel = max_vel  # full throttle
             rospy.loginfo(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
