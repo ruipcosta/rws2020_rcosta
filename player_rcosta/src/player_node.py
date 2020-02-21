@@ -144,6 +144,9 @@ class Player():
 
         if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
             target = msg.blue_alive[0]
+            target1 = []
+            distance1 = []
+            angle1 = []
             #target1 = msg.blue_alive[0]  # select the first alive green player (I am hunting green)
             #target2 = msg.blue_alive[1]
             #target3 = msg.blue_alive[2]
@@ -152,6 +155,18 @@ class Player():
             #distance1, angle1 = getDistanceAndAngleToTarget(self.listener, self.player_name, target1)
             #distance2, angle2 = getDistanceAndAngleToTarget(self.listener, self.player_name, target2)
             #distance3, angle3 = getDistanceAndAngleToTarget(self.listener, self.player_name, target3)
+
+            for x in range(0, len(msg.blue_alive)-1):
+                target1[x]=msg.blue_alive[x]
+                distance1[x], angle1[x] = getDistanceAndAngleToTarget(self.listener, self.player_name, target1[x])
+
+            for a in range(1,len(target1)):
+                if distance1[x] < distance1[x-1]:
+                    target = target1[x]
+                    angle=angle1[x]
+
+
+
 
            # if distance1 < distance2:
            #     if distance1 < distance3:
@@ -171,15 +186,20 @@ class Player():
 
             vel = max_vel  # full throttle
             rospy.loginfo(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
+
+            # Actually move the player
+            movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
+
         else:  # what else to do? Lets just move towards the center
-            target = 'world'
+            target = msg.red_alive[0]
             distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
             vel = max_vel  # full throttle
             rospy.loginfo(self.player_name + ': Moving to the center of the arena.')
             rospy.loginfo('I am ' + str(distance) + ' from ' + target)
 
-        # Actually move the player
-        movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
+            # Actually move the player
+            movePlayer(self.br, self.player_name, self.transform, vel, -angle, max_vel)
+
 
 
 def callback(msg):
