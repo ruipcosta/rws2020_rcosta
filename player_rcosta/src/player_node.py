@@ -166,27 +166,27 @@ class Player():
     def makeAPlayCallBack(self, msg):
         max_vel, max_angle = msg.cheetah, math.pi / 30
 
-        # if msg.blue_alive
+        if msg.blue_alive:
 
         # if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one blue alive)
             # target = 'world'
             # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
 
-        distancelist = []
-        anglelist = []
+            distancelist = []
+            anglelist = []
 
 
-        for i in range(len(msg.blue_alive)):
-            distance, angletg = getDistanceAndAngleToTarget(self.listener, self.player_name, msg.blue_alive[i])
-            distancelist.append(distance)
-            anglelist.append(angletg)
+            for i in range(len(msg.blue_alive)):
+                distance, angletg = getDistanceAndAngleToTarget(self.listener, self.player_name, msg.blue_alive[i])
+                distancelist.append(distance)
+                anglelist.append(angletg)
 
-        targetnm = distancelist.index(min(distancelist))
-        targetblue = msg.blue_alive[targetnm]
-        angleblue = anglelist[targetnm]
+            targetnm = distancelist.index(min(distancelist))
+            targetblue = msg.blue_alive[targetnm]
+            angleblue = anglelist[targetnm]
 
-        if angleblue is None:
-            angleblue = 0
+            if angleblue is None:
+                angleblue = 0
 
 
 
@@ -205,23 +205,23 @@ class Player():
         # else:  # what else to do? Lets just move towards the center
             # target = 'world'
             # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+        if msg.red_alive:
+            distancelistred = []
+            anglelistred = []
 
-        distancelistred = []
-        anglelistred = []
+            for i in range(len(msg.red_alive)):
+                distancered, angletgred = getDistanceAndAngleToTarget(self.listener, self.player_name, msg.red_alive[i])
+                distancelistred.append(distancered)
+                anglelistred.append(angletgred)
 
-        for i in range(len(msg.red_alive)):
-            distancered, angletgred = getDistanceAndAngleToTarget(self.listener, self.player_name, msg.red_alive[i])
-            distancelistred.append(distancered)
-            anglelistred.append(angletgred)
+            targetnmred = distancelistred.index(min(distancelistred))
+            targetred = msg.red_alive[targetnmred]
+            anglered = anglelistred[targetnmred]
 
-        targetnmred = distancelistred.index(min(distancelistred))
-        targetred = msg.red_alive[targetnmred]
-        anglered = anglelistred[targetnmred]
+            if anglered is None:
+                anglered = 0
 
-        if anglered is None:
-            anglered = 0
-
-        anglered = -anglered
+            anglered = -anglered
 
             # red esta mais perto: FUGIR
         if distancelistred[targetnmred] < distancelist[targetnm]:
@@ -233,16 +233,16 @@ class Player():
             angle = angleblue
             rospy.logwarn(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
 
+###
+        distancetoWorld, angletoWorld = getDistanceAndAngleToTarget(self.listener, self.player_name, 'world')
 
-        # distancetoWorld, angletoWorld = getDistanceAndAngleToTarget(self.listener, self.player_name, 'world')
-        #
-        # if angletoWorld is None:
-        #     angletoWorld = 0
-        #
-        # if distancetoWorld > 7 and angletoWorld > 0:
-        #     angle = angle + math.pi/12
-        # elif distancetoWorld > 7 and angletoWorld < 0:
-        #     angle = angle -math.pi/12
+        if angletoWorld is None:
+            angletoWorld = 0
+
+        if distancetoWorld > 7 and angletoWorld > 0:
+            angle = angle + math.pi/12
+        elif distancetoWorld > 7 and angletoWorld < 0:
+            angle = angle -math.pi/12
 
 
 
