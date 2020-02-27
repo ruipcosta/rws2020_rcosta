@@ -10,6 +10,7 @@ import tf
 from geometry_msgs.msg import Transform, Quaternion, Point
 import numpy as np
 from visualization_msgs.msg import Marker
+from rws2020_msgs.srv import Warp, WarpResponse
 
 
 def getDistanceAndAngleToTarget(tf_listener, my_name, target_name,
@@ -40,12 +41,11 @@ def randomizePlayerPose(transform, arena_radius=8):
     initial_x = initial_r * math.cos(initial_theta)
     initial_y = initial_r * math.sin(initial_theta)
     initial_rotation = 2 * math.pi * random.random()
-    # transform.translation.x = initial_x
-    # transform.translation.y = initial_y
-    transform.translation.x = 0.0
-    transform.translation.y = 0.0
+    transform.translation.x = initial_x
+    transform.translation.y = initial_y
     q = tf.transformations.quaternion_from_euler(0, 0, initial_rotation)
     transform.rotation = Quaternion(q[0], q[1], q[2], q[3])
+    rospy.logwarn("ressuscitei em :" + str(initial_x) +' ' + str(initial_y))
 
 
 def movePlayer(tf_broadcaster, player_name, transform_now, vel, angle, max_vel):
@@ -163,12 +163,26 @@ class Player():
 
         rospy.Subscriber("make_a_play", MakeAPlay, self.makeAPlayCallBack)
 
+        self.warp_server = rospy.Service('~warp', Warp, self.warpServiceCallback)
+
+    def warpServiceCallback(self, req):
+        rospy.loginfo("someone called the service for " )
+
+        quat = (0, 0, 0, 1)
+        trans = (req.x, req.y, 0)
+        self.br.sendTransform(trans, quat, rospy.Time.now(), self.player_name, "world")
+
+        response = WarpResponse()
+        response.success = True
+        return response
+
+
     def makeAPlayCallBack(self, msg):
         max_vel, max_angle = msg.cheetah, math.pi / 30
 
         if msg.blue_alive:
 
-        # if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one blue alive)
+            # if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one blue alive)
             # target = 'world'
             # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
 
@@ -187,6 +201,9 @@ class Player():
 
             if angleblue is None:
                 angleblue = 0
+        else:
+            distancelist = [99999]
+            targetnm = 0
 
 
 
@@ -203,8 +220,8 @@ class Player():
             # movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
 
         # else:  # what else to do? Lets just move towards the center
-            # target = 'world'
-            # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+        # target = 'world'
+        # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
         if msg.red_alive:
             distancelistred = []
             anglelistred = []
@@ -222,6 +239,10 @@ class Player():
                 anglered = 0
 
             anglered = -anglered
+        else:
+            distancelistred = [999999]
+            targetnmred = 0
+
 
             # red esta mais perto: FUGIR
         if distancelistred[targetnmred] < distancelist[targetnm]:
@@ -233,7 +254,8 @@ class Player():
             angle = angleblue
             rospy.logwarn(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
 
-###
+
+
         distancetoWorld, angletoWorld = getDistanceAndAngleToTarget(self.listener, self.player_name, 'world')
 
         if angletoWorld is None:
@@ -241,8 +263,10 @@ class Player():
 
         if distancetoWorld > 7 and angletoWorld > 0:
             angle = angle + math.pi/12
+            rospy.logwarn("adjusting angle")
         elif distancetoWorld > 7 and angletoWorld < 0:
-            angle = angle -math.pi/12
+            angle = angle - math.pi/12
+            rospy.logwarn("adjusting angle")
 
 
 
@@ -257,7 +281,7 @@ class Player():
 
 
 
-                 # Actually move the player
+            # Actually move the player
 
 
         vel = max_vel  # full throttle
