@@ -7,7 +7,7 @@ import math
 
 import rospy
 import tf
-from geometry_msgs.msg import Transform, Quaternion
+from geometry_msgs.msg import Transform, Quaternion, Point
 import numpy as np
 from visualization_msgs.msg import Marker
 
@@ -28,6 +28,7 @@ def getDistanceAndAngleToTarget(tf_listener, my_name, target_name,
     return distance, angle
 
 
+
 def randomizePlayerPose(transform, arena_radius=8):
     """
     Randomizes the initial pose of a player. Based on the code by MGomes.
@@ -39,8 +40,10 @@ def randomizePlayerPose(transform, arena_radius=8):
     initial_x = initial_r * math.cos(initial_theta)
     initial_y = initial_r * math.sin(initial_theta)
     initial_rotation = 2 * math.pi * random.random()
-    transform.translation.x = initial_x
-    transform.translation.y = initial_y
+    # transform.translation.x = initial_x
+    # transform.translation.y = initial_y
+    transform.translation.x = 0.0
+    transform.translation.y = 0.0
     q = tf.transformations.quaternion_from_euler(0, 0, initial_rotation)
     transform.rotation = Quaternion(q[0], q[1], q[2], q[3])
 
@@ -107,23 +110,29 @@ def movePlayer(tf_broadcaster, player_name, transform_now, vel, angle, max_vel):
 class Player():
 
     def __init__(self, player_name):
+
+
+
         self.player_name = player_name
         self.listener = tf.TransformListener()
+        self.transform = Transform()
 
-        self.m = Marker(ns=self.player_name, id=0, type=Marker.TEXT_VIEW_FACING, action=Marker.ADD)
-        self.m.header.frame_id = "rcosta"
-        self.m.header.stamp = rospy.Time.now()
-        self.m.pose.position.y = 1
-        self.m.pose.orientation.w = 1.0
-        self.m.scale.z = 0.4
-        self.m.color.a = 1.0
-        self.m.color.r = 0.0
-        self.m.color.g = 0.0
-        self.m.color.b = 0.0
-        self.m.text = "Nada a declarar"
-        self.m.lifetime = rospy.Duration(3)
 
-        self.pub_bocas = rospy.Publisher('/bocas', Marker, queue_size=1)
+        # marker bocas
+        # self.m = Marker(ns=self.player_name, id=0, type=Marker.LINE_STRIP, action=Marker.ADD)
+        # self.m.header.frame_id = "rcosta"
+        # self.m.header.stamp = rospy.Time.now()
+        # self.m.pose.position.y = 1
+        # self.m.pose.orientation.w = 1.0
+        # self.m.scale.z = 0.4
+        # self.m.color.a = 1.0
+        # self.m.color.r = 0.0
+        # self.m.color.g = 0.0
+        # self.m.color.b = 0.0
+        # self.m.text = "Nada a declarar"
+        # self.m.lifetime = rospy.Duration(3)
+
+        # self.pub_bocas = rospy.Publisher('/bocas', Marker, queue_size=1)
 
         red_team = rospy.get_param('/red_team')
         green_team = rospy.get_param('/green_team')
@@ -150,7 +159,6 @@ class Player():
         rospy.loginfo('I am afraid of ' + str(self.hunters))
 
         self.br = tf.TransformBroadcaster()
-        self.transform = Transform()
         randomizePlayerPose(self.transform)
 
         rospy.Subscriber("make_a_play", MakeAPlay, self.makeAPlayCallBack)
@@ -158,60 +166,102 @@ class Player():
     def makeAPlayCallBack(self, msg):
         max_vel, max_angle = msg.cheetah, math.pi / 30
 
-        if msg.blue_alive[0]:  # PURSUIT MODE: Follow any green player (only if there is at least one green alive)
-            target = msg.blue_alive[0]
-            target1 = []
-            distance1 = []
-            angle1 = []
+        # if msg.blue_alive
+
+        # if msg.blue_alive:  # PURSUIT MODE: Follow any green player (only if there is at least one blue alive)
+            # target = 'world'
+            # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+
+        distancelist = []
+        anglelist = []
 
 
-            distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+        for i in range(len(msg.blue_alive)):
+            distance, angletg = getDistanceAndAngleToTarget(self.listener, self.player_name, msg.blue_alive[i])
+            distancelist.append(distance)
+            anglelist.append(angletg)
 
-           # for x in range(0, len(msg.blue_alive)):
-            #    target1.append(str(msg.blue_alive[x]))
-             #   distance1[x], angle1[x] = getDistanceAndAngleToTarget(self.listener, self.player_name, target1[x])
+        targetnm = distancelist.index(min(distancelist))
+        targetblue = msg.blue_alive[targetnm]
+        angleblue = anglelist[targetnm]
 
-            #for a in range(0,len(target1)):
-             #   if distance1[a] < distance1[a+1]:
-              #      target = target1[a]
-               #     angle=angle1[a]
-
-            if angle is None:
-                angle = 0
-
-            target = msg.blue_alive[0]
-
-            self.m.header.stamp = rospy.Time.now()
-            self.m.text = 'Oh ' + target + ' tas tramado!'
-            self.pub_bocas.publish(self.m)
+        if angleblue is None:
+            angleblue = 0
 
 
-            vel = max_vel  # full throttle
-            rospy.loginfo(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
 
-            # Actually move the player
-            movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
+            # Publica as bocas
+            # self.m.header.stamp = rospy.Time.now()
+            # self.m.text = 'Oh ' + target + ' tas tramado!'
+            # self.pub_bocas.publish(self.m)
 
-        else:  # what else to do? Lets just move towards the center
-            target = msg.red_alive[0]
-            distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
-            distancetw, angletw = getDistanceAndAngleToTarget(self.listener, self.player_name, 'world')
-            vel = max_vel  # full throttle
-            rospy.loginfo(self.player_name + ': Moving to the center of the arena.')
-            rospy.loginfo('I am ' + str(distance) + ' from ' + target)
 
-            if angle is None:
-                angle = 0
-
-            if distancetw > 6:
-                angle = -angletw
-
-            self.m.header.stamp = rospy.Time.now()
-            self.m.text = 'Ninguem me toca!'
-            self.pub_bocas.publish(self.m)
+            # vel = max_vel  # full throttle
+            # rospy.logwarn(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
 
             # Actually move the player
-            movePlayer(self.br, self.player_name, self.transform, vel, -angle, max_vel)
+            # movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
+
+        # else:  # what else to do? Lets just move towards the center
+            # target = 'world'
+            # distance, angle = getDistanceAndAngleToTarget(self.listener, self.player_name, target)
+
+        distancelistred = []
+        anglelistred = []
+
+        for i in range(len(msg.red_alive)):
+            distancered, angletgred = getDistanceAndAngleToTarget(self.listener, self.player_name, msg.red_alive[i])
+            distancelistred.append(distancered)
+            anglelistred.append(angletgred)
+
+        targetnmred = distancelistred.index(min(distancelistred))
+        targetred = msg.red_alive[targetnmred]
+        anglered = anglelistred[targetnmred]
+
+        if anglered is None:
+            anglered = 0
+
+        anglered = -anglered
+
+            # red esta mais perto: FUGIR
+        if distancelistred[targetnmred] < distancelist[targetnm]:
+            target = targetred
+            angle = anglered
+            rospy.logwarn(self.player_name + ': Being Hunted by ' + str(target))
+        else: #blue esta mais perto: ATACAR
+            target = targetblue
+            angle = angleblue
+            rospy.logwarn(self.player_name + ': Hunting ' + str(target) + '(' + str(distance) + ' away)')
+
+
+        # distancetoWorld, angletoWorld = getDistanceAndAngleToTarget(self.listener, self.player_name, 'world')
+        #
+        # if angletoWorld is None:
+        #     angletoWorld = 0
+        #
+        # if distancetoWorld > 7 and angletoWorld > 0:
+        #     angle = angle + math.pi/12
+        # elif distancetoWorld > 7 and angletoWorld < 0:
+        #     angle = angle -math.pi/12
+
+
+
+
+
+
+
+            # Publica as bocas
+            # self.m.header.stamp = rospy.Time.now()
+            # self.m.text = 'Ninguem me toca!'
+            # self.pub_bocas.publish(self.m)
+
+
+
+                 # Actually move the player
+
+
+        vel = max_vel  # full throttle
+        movePlayer(self.br, self.player_name, self.transform, vel, angle, max_vel)
 
 
 
@@ -223,8 +273,6 @@ def main():
     rospy.init_node('rcosta', anonymous=False)
 
     player = Player("rcosta")
-
-    # rospy.Subscriber("chatter",String, callback)
 
     rospy.spin()
 
