@@ -1,1 +1,2 @@
-# rws2020_rcosta
+# ROS workshop code 2020
+
